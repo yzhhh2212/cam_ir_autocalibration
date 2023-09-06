@@ -1,5 +1,6 @@
-#ifndef _CAMERA_H_
-#define _CAMERA_H_
+#ifndef _IR_CAMERA_HPP
+#define _IR_CAMERA_HPP
+
 #include <string>
 #include <vector>
 
@@ -9,12 +10,12 @@
 #include <pcl/io/pcd_io.h>
 #include <pcl/point_types.h>
 #include <pcl/visualization/pcl_visualizer.h>
-// #include <Eigen/Core>
 
-class camera
+
+class ircamera
 {
 public:
-    camera();
+    ircamera();
     bool EstimateBoardPose(cv::Mat image);
     void ProjectBoard();
     pcl::PointCloud<pcl::PointXYZ>::Ptr ProjectChessboardToCameraSpace();
@@ -35,15 +36,9 @@ public:
     static double fy;
     static double cx;
     static double cy;
-
-    static Eigen::Matrix4d _Tci_Original; // ir 2 cam pose before optimize
-    static Eigen::Matrix3d _Rci_Original;
-    static Eigen::Vector3d _tci_Original;
-    static Eigen::Matrix4d _Tci_Optimized; // ir 2 cam pose after optimize
-    static Eigen::Matrix3d _Rci_Optimized;
-    static Eigen::Vector3d _tci_Optimized;
     std::vector<cv::Point3f> _p3ds;
     std::vector<cv::Point2f> _p2ds;
+    Eigen::Matrix4d _Tib;
 
 private:
     // chaseboard para
@@ -57,5 +52,20 @@ private:
     cv::Mat intrinsics_;
     cv::Mat distCoeffs_;
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #endif

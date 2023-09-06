@@ -5,11 +5,22 @@ Eigen::Matrix4d camera::_Tlc_Estimate = Eigen::Matrix4d::Identity();
 Eigen::Matrix3d camera::_Rcl_Estimate = Eigen::Matrix3d::Identity();
 Eigen::Vector3d camera::_tcl_Estimate = Eigen::Vector3d::Zero();
 
-Eigen::Matrix4d camera::_Tcl_manual= Eigen::Matrix4d::Identity();
-Eigen::Matrix4d camera::_Tlc_manual= Eigen::Matrix4d::Identity();
-Eigen::Matrix3d camera::_Rcl_manual= Eigen::Matrix3d::Identity();
-Eigen::Vector3d camera::_tcl_manual= Eigen::Vector3d::Zero();
+Eigen::Matrix4d camera::_Tcl_manual = Eigen::Matrix4d::Identity();
+Eigen::Matrix4d camera::_Tlc_manual = Eigen::Matrix4d::Identity();
+Eigen::Matrix3d camera::_Rcl_manual = Eigen::Matrix3d::Identity();
+Eigen::Vector3d camera::_tcl_manual = Eigen::Vector3d::Zero();
 
+Eigen::Matrix4d camera::_Tci_Optimized = Eigen::Matrix4d::Identity();
+Eigen::Matrix3d camera::_Rci_Optimized = Eigen::Matrix3d::Identity();
+Eigen::Vector3d camera::_tci_Optimized = Eigen::Vector3d::Zero();
+Eigen::Matrix4d camera::_Tci_Original = Eigen::Matrix4d::Identity();
+Eigen::Matrix3d camera::_Rci_Original = Eigen::Matrix3d::Identity();
+Eigen::Vector3d camera::_tci_Original = Eigen::Vector3d::Zero();
+
+double camera::fx = 700.225972;
+double camera::fy = 681.416116;
+double camera::cx = 631.705476;
+double camera::cy = 346.033095;
 
 camera::camera()
 {
@@ -161,7 +172,7 @@ bool camera::Project3DTo2D(cv::Mat &image, pcl::PointCloud<pcl::PointXYZ>::Ptr &
         Eigen::Vector4d transformed_point_homo = _Tcl_Estimate * point_homo;
         cv::Mat point3D = (cv::Mat_<double>(3, 1) << transformed_point_homo(0), transformed_point_homo(1), transformed_point_homo(2));
 
-        cv::Mat point2D = 1 / point3D.at<double>(2,0) * intrinsics_ * point3D;
+        cv::Mat point2D = 1 / point3D.at<double>(2, 0) * intrinsics_ * point3D;
 
         cv::Point2f pt2D(point2D.at<double>(0, 0), point2D.at<double>(1, 0));
         // 畸变矫正（如果需要）
@@ -170,11 +181,11 @@ bool camera::Project3DTo2D(cv::Mat &image, pcl::PointCloud<pcl::PointXYZ>::Ptr &
         // cv::undistortPoints(srcPoints, dstPoints, intrinsics, distCoeffs);
 
         // 绘制点
-        cv::circle(image, pt2D, 1 , cv::Scalar(0, 255, 0), -1 , cv::LINE_AA);
+        cv::circle(image, pt2D, 1, cv::Scalar(0, 255, 0), -1, cv::LINE_AA);
     }
 }
 
-bool camera::UpdatePose(Eigen::Matrix4d Tcl,cv::Mat image,pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud)
+bool camera::UpdatePose(Eigen::Matrix4d Tcl, cv::Mat image, pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud)
 {
     for (const auto &point : cloud->points)
     {
@@ -182,14 +193,13 @@ bool camera::UpdatePose(Eigen::Matrix4d Tcl,cv::Mat image,pcl::PointCloud<pcl::P
         Eigen::Vector4d transformed_point_homo = Tcl * point_homo;
         cv::Mat point3D = (cv::Mat_<double>(3, 1) << transformed_point_homo(0), transformed_point_homo(1), transformed_point_homo(2));
 
-        cv::Mat point2D = 1 / point3D.at<double>(2,0) * intrinsics_ * point3D;
+        cv::Mat point2D = 1 / point3D.at<double>(2, 0) * intrinsics_ * point3D;
 
         cv::Point2f pt2D(point2D.at<double>(0, 0), point2D.at<double>(1, 0));
 
-        cv::circle(image, pt2D, 1 , cv::Scalar(0, 255, 0), -1 , cv::LINE_AA);
+        cv::circle(image, pt2D, 1, cv::Scalar(0, 255, 0), -1, cv::LINE_AA);
         cv::imshow("image", image);
     }
-
 }
 pcl::PointCloud<pcl::PointXYZ>::Ptr camera::Update3dPose(Eigen::Matrix4d Tcl)
 {
