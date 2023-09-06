@@ -23,7 +23,7 @@ class optimizer
 public:
     optimizer();
 
-    bool PoseOptimization(std::vector<camera* > cameras,std::vector<ircamera* > ircameras);
+    bool PoseOptimization(std::vector<std::shared_ptr<camera>> &cameras, std::vector<std::shared_ptr<ircamera>> &ircameras);
 
 
 };

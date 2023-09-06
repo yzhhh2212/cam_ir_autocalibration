@@ -44,6 +44,7 @@ public:
     static Eigen::Vector3d _tci_Optimized;
     std::vector<cv::Point3f> _p3ds;
     std::vector<cv::Point2f> _p2ds;
+    Eigen::Matrix4d _Tcb;
 
 private:
     // chaseboard para
@@ -52,7 +53,6 @@ private:
     float _square_size;
     std::vector<cv::Point3f> _p3ds_plane;
 
-    Eigen::Matrix4d _Tcb;
     Eigen::Matrix4d _Tbc;
     cv::Mat intrinsics_;
     cv::Mat distCoeffs_;

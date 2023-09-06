@@ -23,15 +23,7 @@ public:
     bool Project3DTo2D(cv::Mat &image, pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud);
     bool UpdatePose(Eigen::Matrix4d Tcl, cv::Mat image, pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud);
     pcl::PointCloud<pcl::PointXYZ>::Ptr Update3dPose(Eigen::Matrix4d Tcl);
-    static Eigen::Matrix4d _Tcl_Estimate; // estimate laser to camera
-    static Eigen::Matrix3d _Rcl_Estimate;
-    static Eigen::Vector3d _tcl_Estimate;
-    static Eigen::Matrix4d _Tlc_Estimate;
 
-    static Eigen::Matrix4d _Tcl_manual; // estimate laser to camera
-    static Eigen::Matrix3d _Rcl_manual;
-    static Eigen::Vector3d _tcl_manual;
-    static Eigen::Matrix4d _Tlc_manual;
     static double fx;
     static double fy;
     static double cx;

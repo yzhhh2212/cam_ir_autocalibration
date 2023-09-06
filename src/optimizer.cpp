@@ -1,6 +1,6 @@
 #include "optimizer.hpp"
 
-bool optimizer::PoseOptimization(std::vector<camera *> cameras, std::vector<ircamera *> ircameras)
+bool optimizer::PoseOptimization(std::vector<std::shared_ptr<camera>> &cameras, std::vector<std::shared_ptr<ircamera>> &ircameras)
 {
     // Step 1：构造g2o优化器, BlockSolver_6_3表示：位姿 _PoseDim 为6维，路标点 _LandmarkDim 是3维
     g2o::SparseOptimizer optimizer;
@@ -52,8 +52,8 @@ bool optimizer::PoseOptimization(std::vector<camera *> cameras, std::vector<irca
     long int index = 1;
     for (int i = 0; i < cameras.size(); ++i)
     {
-        camera *camera = cameras[i];
-        ircamera *ircamera = ircameras[i];
+        std::shared_ptr<camera> camera = cameras[i];
+        std::shared_ptr<ircamera> ircamera = ircameras[i];
 
         if (camera->_p2ds.size() != ircamera->_p2ds.size())
             continue;

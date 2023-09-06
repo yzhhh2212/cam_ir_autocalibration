@@ -48,9 +48,9 @@ bool camera::EstimateBoardPose(cv::Mat image)
     cv::Mat imgUndistort;
     std::vector<cv::Point2f> corners;
     cv::undistort(image, imgUndistort, intrinsics_, distCoeffs_);
-    cv::cvtColor(image, gray, cv::COLOR_BGR2GRAY);
+    cv::cvtColor(imgUndistort, gray, cv::COLOR_BGR2GRAY);
 
-    if (cv::findChessboardCorners(image, pattern_size, corners))
+    if (cv::findChessboardCorners(imgUndistort, pattern_size, corners))
     {
         // cv::cornerSubPix(
         //     image, corners, cv::Size(11, 11), cv::Size(-1, -1),
@@ -59,7 +59,6 @@ bool camera::EstimateBoardPose(cv::Mat image)
                          cv::TermCriteria(cv::TermCriteria::EPS + cv::TermCriteria::COUNT, 30, 0.1));
         if (corners.size() == _col * _row)
         {
-            _p3ds_plane.reserve(_row * _col * 121);
             int count = 0;
             for (int i = 0; i < _row; i++)
             {
@@ -72,18 +71,10 @@ bool camera::EstimateBoardPose(cv::Mat image)
                         cv::Point3f(x, y, 0.0));
                     _p2ds.emplace_back(cv::Point2f(corners[count].x, corners[count].y));
                     count++;
-                    for (double k = 0; k < 0.0275; k += 0.00275)
-                    {
-                        double dx = (j + 1 < _col) ? 1 : -1;
-                        double dy = (i + 1 < _row) ? 1 : -1;
-
-                        _p3ds_plane.emplace_back(x + k * dx, y, 0.0);
-                        _p3ds_plane.emplace_back(x, y + k * dy, 0.0);
-                    }
                 }
             }
 
-            cv::drawChessboardCorners(image, pattern_size, cv::Mat(corners), true);
+            cv::drawChessboardCorners(imgUndistort, pattern_size, cv::Mat(corners), true);
         }
         else
         {
@@ -101,7 +92,7 @@ bool camera::EstimateBoardPose(cv::Mat image)
     // use PnP to calculate the pose
     cv::Mat r, t;
     cv::Mat distCoeffs = cv::Mat::zeros(1, 5, CV_64F);
-    cv::solvePnP(_p3ds, _p2ds, intrinsics_, distCoeffs_, r, t);
+    cv::solvePnP(_p3ds, _p2ds, intrinsics_, distCoeffs, r, t);
     // std::cout << "solvePnP" << std::endl;
     // type transform
     cv::Mat cvR;
@@ -125,14 +116,6 @@ bool camera::EstimateBoardPose(cv::Mat image)
     // std::cout << "The transformation matrix _Tcb is: \n"
     //           << _Tcb << std::endl;
     return true;
-    // visualize coordinate
-    // Eigen::Matrix3d K;
-    // cv::cv2eigen(intrinsics_, K);
-    // Coordinate coor(Rcb, tcb);
-
-    // std::cout << "before DrawOnImg" << std::endl;
-    // coor.DrawOnImg(K, imgUndistort, imgUndistort);
-    // std::cout << "after DrawOnImg" << std::endl;
 }
 
 pcl::PointCloud<pcl::PointXYZ>::Ptr camera::ProjectChessboardToCameraSpace()
