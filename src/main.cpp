@@ -91,8 +91,8 @@ int main()
     std::string folderPath = "/usr/local/project/data/"; // 例如 "C:/images/"
     std::string fileExtension = ".jpg";                  // 图片的扩展名
     std::string pointcloudExtension = ".pcd";            // 图片的扩展名
-    pcl::visualization::CloudViewer viewer("Cloud Viewer");
-    viewer.runOnVisualizationThread(VisualizationCallback);
+    // pcl::visualization::CloudViewer viewer("Cloud Viewer");
+    // viewer.runOnVisualizationThread(VisualizationCallback);
     double w = 0.999334;
     double x = 0.00683661;
     double y = 0.0270457;
@@ -129,12 +129,19 @@ int main()
         cv::Mat ir_raw_image = cv::imread(filePath, cv::IMREAD_COLOR); // 读取图片
         cv::cvtColor(image, gray, cv::COLOR_BGR2GRAY);
         if (!rgb_camera->EstimateBoardPose(image) || !ir_camera->EstimateBoardPose(irimage))
+        {
+            std::cout << "图片角点不匹配，抛弃图片 " << i << std::endl;
             continue;
-
+        }
         cameras.push_back(rgb_camera);
         ircameras.push_back(ir_camera);
     }
-    Eigen::Matrix4d Tci_init = cameras[0]->_Tcb * ircameras[0]->_Tib.inverse();
-    optimizer pose_optimizer;
-    pose_optimizer.PoseOptimization(cameras, ircameras);//todo:设置顶点初值
+    camera::_Tci_Original = cameras[0]->_Tcb * ircameras[0]->_Tib.inverse();
+    camera::_Rci_Original = camera::_Tci_Original.block<3, 3>(0, 0);
+    camera::_tci_Original = camera::_Tci_Original.block<3, 1>(0, 3);
+    std::shared_ptr<optimizer> pose_optimizer (new optimizer());
+    if(pose_optimizer->PoseOptimization(cameras, ircameras))
+    {
+        std::cout << "optimize success" <<std::endl;
+    }
 }

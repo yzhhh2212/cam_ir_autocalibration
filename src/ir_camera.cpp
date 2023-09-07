@@ -42,12 +42,13 @@ bool ircamera::EstimateBoardPose(cv::Mat image)
         }
         else
         {
-            std::cout << "Chessboard config is not correct with image\n";
+            std::cout << "Chessboard config is not correct with ir_image\n";
+            return false;
         }
     }
     else
     {
-        std::cout << "No chessboard detected in image\n";
+        std::cout << "No chessboard detected in ir_image\n";
         return false;
     }
 

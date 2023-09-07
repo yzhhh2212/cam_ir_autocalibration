@@ -79,6 +79,7 @@ bool camera::EstimateBoardPose(cv::Mat image)
         else
         {
             std::cout << "Chessboard config is not correct with image\n";
+            return false;
         }
     }
     else

@@ -1,6 +1,8 @@
 #ifndef _OPTIMIZER_TYPES_HPP
 #define _OPTIMIZER_TYPES_HPP
-#include "thirdparty/g2o/g2o/core/base_unary_edge.h"
+#include <thirdparty/g2o/g2o/core/base_unary_edge.h>
+// #include "/usr/local/project/keystar/cam_ir_auto/thirdparty/g2o/g2o/core/base_unary_edge.h"
+
 #include <thirdparty/g2o/g2o/types/types_six_dof_expmap.h>
 #include <thirdparty/g2o/g2o/types/sim3.h>
 

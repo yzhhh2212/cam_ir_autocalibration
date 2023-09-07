@@ -1,2 +1,3 @@
 build/
 .vscode/
+thirdparty/g2o/build/

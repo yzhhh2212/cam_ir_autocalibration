@@ -1,5 +1,13 @@
 #include "optimizer.hpp"
 
+
+
+
+optimizer::optimizer()
+{
+    
+}
+
 bool optimizer::PoseOptimization(std::vector<std::shared_ptr<camera>> &cameras, std::vector<std::shared_ptr<ircamera>> &ircameras)
 {
     // Step 1：构造g2o优化器, BlockSolver_6_3表示：位姿 _PoseDim 为6维，路标点 _LandmarkDim 是3维
@@ -96,4 +104,5 @@ bool optimizer::PoseOptimization(std::vector<std::shared_ptr<camera>> &cameras, 
 
     camera::_Tci_Optimized.block<3, 3>(0, 0) = camera::_Rci_Optimized;
     camera::_Tci_Optimized.block<3, 1>(0, 3) = camera::_tci_Optimized;
+    return true;
 }
