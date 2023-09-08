@@ -48,6 +48,7 @@ bool camera::EstimateBoardPose(cv::Mat image)
     cv::Mat imgUndistort;
     std::vector<cv::Point2f> corners;
     cv::undistort(image, imgUndistort, intrinsics_, distCoeffs_);
+    // imgUndistort =image;
     cv::cvtColor(imgUndistort, gray, cv::COLOR_BGR2GRAY);
 
     if (cv::findChessboardCorners(imgUndistort, pattern_size, corners))
@@ -73,8 +74,7 @@ bool camera::EstimateBoardPose(cv::Mat image)
                     count++;
                 }
             }
-
-            cv::drawChessboardCorners(imgUndistort, pattern_size, cv::Mat(corners), true);
+            // cv::drawChessboardCorners(imgUndistort, pattern_size, cv::Mat(corners), true);
         }
         else
         {
@@ -113,7 +113,6 @@ bool camera::EstimateBoardPose(cv::Mat image)
     _Tbc.block<3, 3>(0, 0) = Rcb.inverse();
     _Tbc.block<3, 1>(0, 3) = -Rcb.inverse() * tcb;
 
-    // std::cout << "pnp求位姿成功" << std::endl;
     // std::cout << "The transformation matrix _Tcb is: \n"
     //           << _Tcb << std::endl;
     return true;

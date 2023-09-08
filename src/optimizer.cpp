@@ -1,11 +1,7 @@
 #include "optimizer.hpp"
 
-
-
-
 optimizer::optimizer()
 {
-    
 }
 
 bool optimizer::PoseOptimization(std::vector<std::shared_ptr<camera>> &cameras, std::vector<std::shared_ptr<ircamera>> &ircameras)
@@ -64,7 +60,10 @@ bool optimizer::PoseOptimization(std::vector<std::shared_ptr<camera>> &cameras, 
         std::shared_ptr<ircamera> ircamera = ircameras[i];
 
         if (camera->_p2ds.size() != ircamera->_p2ds.size())
+        {
+            std::cout << "容器点不等，抛弃！！！！！" << std::endl;
             continue;
+        }
         for (int j = 0; j < camera->_p2ds.size(); ++j)
         {
             Eigen::Matrix<double, 2, 1> obs;
@@ -93,9 +92,12 @@ bool optimizer::PoseOptimization(std::vector<std::shared_ptr<camera>> &cameras, 
             // vnIndexEdgeMono.push_back(i);
         }
     }
+    std::cout << "一共有 " << index << "个点" << std::endl;
     optimizer.setVerbose(true);
     optimizer.initializeOptimization();
-    optimizer.optimize(1);
+    std::cout << "Added vertex to optimizer." << std::endl;
+    optimizer.optimize(4);
+    std::cout << "Added vertex to optimizer." << std::endl;
 
     g2o::SE3Quat result = vSE3->estimate();
 

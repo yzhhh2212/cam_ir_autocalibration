@@ -88,9 +88,9 @@ bool readYaml(Eigen::Matrix3d &Rcl, Eigen::Vector3d &tcl)
 
 int main()
 {
-    std::string folderPath = "/usr/local/project/data/"; // 例如 "C:/images/"
-    std::string fileExtension = ".jpg";                  // 图片的扩展名
-    std::string pointcloudExtension = ".pcd";            // 图片的扩展名
+    std::string folderPath = "/usr/local/project/rgb_ir_image/rgb_ir_image/"; // 例如 "C:/images/"
+    std::string fileExtension = ".jpg";                                       // 图片的扩展名
+    std::string irimgExtension = ".jpg";                                      // 图片的扩展名
     // pcl::visualization::CloudViewer viewer("Cloud Viewer");
     // viewer.runOnVisualizationThread(VisualizationCallback);
     double w = 0.999334;
@@ -109,25 +109,39 @@ int main()
     std::vector<std::shared_ptr<camera>> cameras;
     std::vector<std::shared_ptr<ircamera>> ircameras;
 
-    for (int i = 0; i <= 174; ++i)
+    for (int i = 1; i <= 319 ;++i)
     {
         std::shared_ptr<camera> rgb_camera(new camera());
         std::shared_ptr<ircamera> ir_camera(new ircamera());
         std::stringstream ss;
-        std::stringstream sspc;
-        ss << folderPath << i << fileExtension; // 拼接完整的文件路径
-        sspc << folderPath << i << pointcloudExtension;
+        std::stringstream ssir;
+        ss << folderPath << "rgb_" << i << fileExtension; // 拼接完整的文件路径
+        ssir << folderPath << "ir_" << i << irimgExtension;
         std::string filePath = ss.str();
-        std::string pointcloudPath = sspc.str();
+        std::string irimgPath = ssir.str();
 
         cv::Mat gray;
 
-        cv::Mat image = cv::imread(filePath, cv::IMREAD_COLOR);     // 读取图片
-        cv::Mat raw_image = cv::imread(filePath, cv::IMREAD_COLOR); // 读取图片
+        cv::Mat image = cv::imread(filePath, cv::IMREAD_COLOR); // 读取图片
+        // cv::Mat raw_image = cv::imread(filePath, cv::IMREAD_COLOR); // 读取图片
+        if (image.empty())
+        {
+            std::cerr << "Failed to read image from " << filePath << std::endl;
+            continue; // Skip the current iteration
+        }
 
-        cv::Mat irimage = cv::imread(filePath, cv::IMREAD_COLOR);      // 读取图片
-        cv::Mat ir_raw_image = cv::imread(filePath, cv::IMREAD_COLOR); // 读取图片
-        cv::cvtColor(image, gray, cv::COLOR_BGR2GRAY);
+        cv::Mat irimage = cv::imread(irimgPath, cv::IMREAD_GRAYSCALE); // 读取图片
+        if (irimage.empty())
+        {
+            std::cerr << "Failed to read image from " << irimgPath << std::endl;
+            continue; // Skip the current iteration
+        }
+        cv::imshow("img",image);
+        cv::imshow("irimg",irimage);
+        cv::waitKey(1);
+
+        // cv::Mat ir_raw_image = cv::imread(irimgPath, cv::IMREAD_GRAYSCALE); // 读取图片
+        // cv::cvtColor(image, gray, cv::COLOR_BGR2GRAY);
         if (!rgb_camera->EstimateBoardPose(image) || !ir_camera->EstimateBoardPose(irimage))
         {
             std::cout << "图片角点不匹配，抛弃图片 " << i << std::endl;
@@ -139,9 +153,11 @@ int main()
     camera::_Tci_Original = cameras[0]->_Tcb * ircameras[0]->_Tib.inverse();
     camera::_Rci_Original = camera::_Tci_Original.block<3, 3>(0, 0);
     camera::_tci_Original = camera::_Tci_Original.block<3, 1>(0, 3);
-    std::shared_ptr<optimizer> pose_optimizer (new optimizer());
-    if(pose_optimizer->PoseOptimization(cameras, ircameras))
+    std::shared_ptr<optimizer> pose_optimizer(new optimizer());
+    std::cout<<"size of cameras" << cameras.size() << std::endl;
+    std::cout<<"size of ircameras" << ircameras.size() << std::endl;
+    if (pose_optimizer->PoseOptimization(cameras, ircameras))
     {
-        std::cout << "optimize success" <<std::endl;
+        std::cout << "optimize success" << std::endl;
     }
 }
