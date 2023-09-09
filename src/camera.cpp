@@ -74,7 +74,8 @@ bool camera::EstimateBoardPose(cv::Mat image)
                     count++;
                 }
             }
-            // cv::drawChessboardCorners(imgUndistort, pattern_size, cv::Mat(corners), true);
+            cv::drawChessboardCorners(imgUndistort, pattern_size, cv::Mat(corners), true);
+            cv::imshow("image",imgUndistort);
         }
         else
         {

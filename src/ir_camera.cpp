@@ -70,6 +70,8 @@ bool ircamera::EstimateBoardPose(cv::Mat image)
             }
 
             cv::drawChessboardCorners(imgUndistort, pattern_size, cv::Mat(corners), true);
+            cv::imshow("ir_image",imgUndistort);
+            cv::waitKey(1);
         }
         else
         {

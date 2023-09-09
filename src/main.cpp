@@ -136,9 +136,9 @@ int main()
             std::cerr << "Failed to read image from " << irimgPath << std::endl;
             continue; // Skip the current iteration
         }
-        cv::imshow("img",image);
-        cv::imshow("irimg",irimage);
-        cv::waitKey(1);
+        // cv::imshow("img",image);
+        // cv::imshow("irimg",irimage);
+        // cv::waitKey(1);
 
         // cv::Mat ir_raw_image = cv::imread(irimgPath, cv::IMREAD_GRAYSCALE); // 读取图片
         // cv::cvtColor(image, gray, cv::COLOR_BGR2GRAY);
