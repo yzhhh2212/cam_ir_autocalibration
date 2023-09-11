@@ -38,11 +38,11 @@ void VisualizationCallback(pcl::visualization::PCLVisualizer &viz)
 
 bool readYaml(Eigen::Matrix3d &Rcl, Eigen::Vector3d &tcl)
 {
-    std::ifstream f("/usr/local/project/keystar/cam_tof_manual/estimate_pose.yaml");
+    std::ifstream f("/home/yzhhh/project/keystar/cam_tof_manual/estimate_pose.yaml");
     if (f.good())
     {
         f.close();
-        cv::FileStorage fs("/usr/local/project/keystar/cam_tof_manual/estimate_pose.yaml", cv::FileStorage::READ);
+        cv::FileStorage fs("/home/yzhhh/project/keystar/cam_tof_manual/estimate_pose.yaml", cv::FileStorage::READ);
         // 你的其他代码
 
         if (!fs.isOpened())
@@ -88,7 +88,7 @@ bool readYaml(Eigen::Matrix3d &Rcl, Eigen::Vector3d &tcl)
 
 int main()
 {
-    std::string folderPath = "/usr/local/project/rgb_ir_image/rgb_ir_image/"; // 例如 "C:/images/"
+    std::string folderPath = "/home/yzhhh/project/rgb_ir_image/rgb_ir_image/"; // 例如 "C:/images/"
     std::string fileExtension = ".jpg";                                       // 图片的扩展名
     std::string irimgExtension = ".jpg";                                      // 图片的扩展名
     // pcl::visualization::CloudViewer viewer("Cloud Viewer");
@@ -154,8 +154,8 @@ int main()
     camera::_Rci_Original = camera::_Tci_Original.block<3, 3>(0, 0);
     camera::_tci_Original = camera::_Tci_Original.block<3, 1>(0, 3);
     std::shared_ptr<optimizer> pose_optimizer(new optimizer());
-    std::cout<<"size of cameras" << cameras.size() << std::endl;
-    std::cout<<"size of ircameras" << ircameras.size() << std::endl;
+    std::cout<<"size of cameras " << cameras.size() << std::endl;
+    std::cout<<"size of ircameras " << ircameras.size() << std::endl;
     if (pose_optimizer->PoseOptimization(cameras, ircameras))
     {
         std::cout << "optimize success" << std::endl;

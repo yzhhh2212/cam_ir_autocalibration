@@ -14,6 +14,7 @@
 class camera
 {
 public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     camera();
     bool EstimateBoardPose(cv::Mat image);
     void ProjectBoard();
@@ -42,8 +43,8 @@ public:
     static Eigen::Matrix4d _Tci_Optimized; // ir 2 cam pose after optimize
     static Eigen::Matrix3d _Rci_Optimized;
     static Eigen::Vector3d _tci_Optimized;
-    std::vector<cv::Point3f> _p3ds;
-    std::vector<cv::Point2f> _p2ds;
+    std::vector<cv::Point3d> _p3ds;
+    std::vector<cv::Point2d> _p2ds;
     Eigen::Matrix4d _Tcb;
 
 private:

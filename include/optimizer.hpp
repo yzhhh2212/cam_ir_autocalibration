@@ -1,6 +1,6 @@
 #ifndef _OPTIMIZER_HPP
 #define _OPTIMIZER_HPP
-//以相机像素坐标为观测值
+// 以相机像素坐标为观测值
 #include "optimizer_types.hpp"
 #include "ir_camera.hpp"
 
@@ -14,18 +14,13 @@
 #include "thirdparty/g2o/g2o/core/robust_kernel_impl.h"
 #include "thirdparty/g2o/g2o/solvers/linear_solver_dense.h"
 
-
-
-
-
-class optimizer 
+class optimizer
 {
 public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     optimizer();
 
     bool PoseOptimization(std::vector<std::shared_ptr<camera>> &cameras, std::vector<std::shared_ptr<ircamera>> &ircameras);
-
-
 };
 
 #endif

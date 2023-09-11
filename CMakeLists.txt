@@ -4,7 +4,10 @@ cmake_minimum_required(VERSION 3.10)
 project(cam_tof_manual)
 
 # 设置C++标准
-set(CMAKE_CXX_STANDARD 14)
+#set(CMAKE_CXX_STANDARD 14)
+
+SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O0")
+SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O0")
 
 # 查找OpenCV库
 find_package(OpenCV REQUIRED)

@@ -63,8 +63,8 @@ bool ircamera::EstimateBoardPose(cv::Mat image)
                     float y = i * _square_size;
                     // Todo: change 3d-coordinate
                     _p3ds.emplace_back(
-                        cv::Point3f(x, y, 0.0));
-                    _p2ds.emplace_back(cv::Point2f(corners[count].x, corners[count].y));
+                        cv::Point3d(x, y, 0.0));
+                    _p2ds.emplace_back(cv::Point2d(corners[count].x, corners[count].y));
                     count++;
                 }
             }

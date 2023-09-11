@@ -11,10 +11,10 @@
 #include <pcl/point_types.h>
 #include <pcl/visualization/pcl_visualizer.h>
 
-
 class ircamera
 {
 public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     ircamera();
     bool EstimateBoardPose(cv::Mat image);
     void ProjectBoard();
@@ -28,8 +28,8 @@ public:
     static double fy;
     static double cx;
     static double cy;
-    std::vector<cv::Point3f> _p3ds;
-    std::vector<cv::Point2f> _p2ds;
+    std::vector<cv::Point3d> _p3ds;
+    std::vector<cv::Point2d> _p2ds;
     Eigen::Matrix4d _Tib;
 
 private:
@@ -44,20 +44,5 @@ private:
     cv::Mat intrinsics_;
     cv::Mat distCoeffs_;
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 #endif
