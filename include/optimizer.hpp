@@ -13,6 +13,7 @@
 #include "thirdparty/g2o/g2o/types/types_six_dof_expmap.h"
 #include "thirdparty/g2o/g2o/core/robust_kernel_impl.h"
 #include "thirdparty/g2o/g2o/solvers/linear_solver_dense.h"
+#include <random>
 
 class optimizer
 {
@@ -20,7 +21,8 @@ public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     optimizer();
 
-    bool PoseOptimization(std::vector<std::shared_ptr<camera>> &cameras, std::vector<std::shared_ptr<ircamera>> &ircameras);
+    bool PoseOptimization(std::vector<std::shared_ptr<camera>> &cameras, std::vector<std::shared_ptr<ircamera>> &ircameras, Eigen::Matrix4d initial_Tci);
+    Eigen::Matrix4d ComputeInitialT(std::vector<std::shared_ptr<camera>> &cameras, std::vector<std::shared_ptr<ircamera>> &ircameras);
 };
 
 #endif

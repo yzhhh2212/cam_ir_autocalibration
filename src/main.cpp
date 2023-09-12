@@ -36,59 +36,59 @@ void VisualizationCallback(pcl::visualization::PCLVisualizer &viz)
     }
 }
 
-bool readYaml(Eigen::Matrix3d &Rcl, Eigen::Vector3d &tcl)
-{
-    std::ifstream f("/home/yzhhh/project/keystar/cam_tof_manual/estimate_pose.yaml");
-    if (f.good())
-    {
-        f.close();
-        cv::FileStorage fs("/home/yzhhh/project/keystar/cam_tof_manual/estimate_pose.yaml", cv::FileStorage::READ);
-        // 你的其他代码
+// bool readYaml(Eigen::Matrix3d &Rcl, Eigen::Vector3d &tcl)
+// {
+//     std::ifstream f("/home/yzhhh/project/keystar/cam_tof_manual/estimate_pose.yaml");
+//     if (f.good())
+//     {
+//         f.close();
+//         cv::FileStorage fs("/home/yzhhh/project/keystar/cam_tof_manual/estimate_pose.yaml", cv::FileStorage::READ);
+//         // 你的其他代码
 
-        if (!fs.isOpened())
-        {
-            std::cerr << "Failed to open the YAML file!" << std::endl;
-            return false;
-        }
+//         if (!fs.isOpened())
+//         {
+//             std::cerr << "Failed to open the YAML file!" << std::endl;
+//             return false;
+//         }
 
-        // 读取旋转四元数
-        cv::FileNode rotationNode = fs["rotation"];
-        double w = (double)rotationNode["w"];
-        double x = (double)rotationNode["x"];
-        double y = (double)rotationNode["y"];
-        double z = (double)rotationNode["z"];
+//         // 读取旋转四元数
+//         cv::FileNode rotationNode = fs["rotation"];
+//         double w = (double)rotationNode["w"];
+//         double x = (double)rotationNode["x"];
+//         double y = (double)rotationNode["y"];
+//         double z = (double)rotationNode["z"];
 
-        // 读取平移向量
-        cv::FileNode translationNode = fs["translation"];
-        double tx = (double)translationNode["x"];
-        double ty = (double)translationNode["y"];
-        double tz = (double)translationNode["z"];
+//         // 读取平移向量
+//         cv::FileNode translationNode = fs["translation"];
+//         double tx = (double)translationNode["x"];
+//         double ty = (double)translationNode["y"];
+//         double tz = (double)translationNode["z"];
 
-        // 将四元数转换为旋转矩阵（使用 Eigen 库）
-        Eigen::Quaterniond quat(w, x, y, z);
-        Rcl = quat.toRotationMatrix();
+//         // 将四元数转换为旋转矩阵（使用 Eigen 库）
+//         Eigen::Quaterniond quat(w, x, y, z);
+//         Rcl = quat.toRotationMatrix();
 
-        // 创建平移向量（使用 Eigen 库）
-        tcl << tx, ty, tz;
+//         // 创建平移向量（使用 Eigen 库）
+//         tcl << tx, ty, tz;
 
-        // 输出读取到的值
-        std::cout << "Rotation Matrix: \n"
-                  << Rcl << std::endl;
-        std::cout << "Translation Vector: \n"
-                  << tcl << std::endl;
+//         // 输出读取到的值
+//         std::cout << "Rotation Matrix: \n"
+//                   << Rcl << std::endl;
+//         std::cout << "Translation Vector: \n"
+//                   << tcl << std::endl;
 
-        return true;
-    }
-    else
-    {
-        std::cout << "文件不存在或无法打开" << std::endl;
-    }
-    // 创建一个 FileStorage 对象，用于读取 YAML 文件
-}
+//         return true;
+//     }
+//     else
+//     {
+//         std::cout << "文件不存在或无法打开" << std::endl;
+//     }
+//     // 创建一个 FileStorage 对象，用于读取 YAML 文件
+// }
 
 int main()
 {
-    std::string folderPath = "/home/yzhhh/project/rgb_ir_image/rgb_ir_image/"; // 例如 "C:/images/"
+    std::string folderPath = "/usr/local/project/keystar/rgb_ir_image/"; // 例如 "C:/images/"
     std::string fileExtension = ".jpg";                                       // 图片的扩展名
     std::string irimgExtension = ".jpg";                                      // 图片的扩展名
     // pcl::visualization::CloudViewer viewer("Cloud Viewer");
@@ -150,13 +150,14 @@ int main()
         cameras.push_back(rgb_camera);
         ircameras.push_back(ir_camera);
     }
-    camera::_Tci_Original = cameras[0]->_Tcb * ircameras[0]->_Tib.inverse();
-    camera::_Rci_Original = camera::_Tci_Original.block<3, 3>(0, 0);
-    camera::_tci_Original = camera::_Tci_Original.block<3, 1>(0, 3);
+    // camera::_Tci_Original = cameras[0]->_Tcb * ircameras[0]->_Tib.inverse();
+    // camera::_Rci_Original = camera::_Tci_Original.block<3, 3>(0, 0);
+    // camera::_tci_Original = camera::_Tci_Original.block<3, 1>(0, 3);
     std::shared_ptr<optimizer> pose_optimizer(new optimizer());
     std::cout<<"size of cameras " << cameras.size() << std::endl;
     std::cout<<"size of ircameras " << ircameras.size() << std::endl;
-    if (pose_optimizer->PoseOptimization(cameras, ircameras))
+    Eigen::Matrix4d initial_Tci =  pose_optimizer->ComputeInitialT(cameras,ircameras);
+    if (pose_optimizer->PoseOptimization(cameras, ircameras,initial_Tci))
     {
         std::cout << "optimize success" << std::endl;
     }

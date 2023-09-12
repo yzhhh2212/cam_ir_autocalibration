@@ -4,7 +4,7 @@ optimizer::optimizer()
 {
 }
 
-bool optimizer::PoseOptimization(std::vector<std::shared_ptr<camera>> &cameras, std::vector<std::shared_ptr<ircamera>> &ircameras)
+bool optimizer::PoseOptimization(std::vector<std::shared_ptr<camera>> &cameras, std::vector<std::shared_ptr<ircamera>> &ircameras, Eigen::Matrix4d initial_Tci)
 {
     // Step 1：构造g2o优化器, BlockSolver_6_3表示：位姿 _PoseDim 为6维，路标点 _LandmarkDim 是3维
     g2o::SparseOptimizer optimizer;
@@ -23,8 +23,10 @@ bool optimizer::PoseOptimization(std::vector<std::shared_ptr<camera>> &cameras, 
     // Set Frame vertex
     // Step 2：添加顶点：待优化当前帧的Tcw
     g2o::VertexSE3Expmap *vSE3 = new g2o::VertexSE3Expmap();
-    Eigen::Quaterniond quaternion(camera::_Rci_Original);
-    Eigen::Vector3d t = camera::_tci_Original;
+
+    Eigen::Matrix3d R = initial_Tci.block<3, 3>(0, 0);
+    Eigen::Vector3d t = initial_Tci.block<3, 1>(0, 3);
+    Eigen::Quaterniond quaternion(R);
     // vSE3->setEstimate(g2o::SE3Quat(quaternion.cast<double>(), camera::_tci_Original.cast<double>()));
     // Eigen::Matrix3d R;
     // R << 0.999711, 0.0223557, 0.00880984,
@@ -32,8 +34,8 @@ bool optimizer::PoseOptimization(std::vector<std::shared_ptr<camera>> &cameras, 
     //     -0.00884252, 0.00136347, 0.99996;
 
     // Eigen::Vector3d t(-0.00773844, -0.0782872, 0.0435765);
-    Eigen::Quaterniond q(0.999334, 0.00575288, 0.028658, -0.0215528);
-    Eigen::Matrix3d R = q.toRotationMatrix();
+    // Eigen::Quaterniond q(0.999334, 0.00575288, 0.028658, -0.0215528);
+    // Eigen::Matrix3d R = q.toRotationMatrix();
     // Eigen::Vector3d t(-0.0342119, -0.0685892, 0.0934624);
 
     g2o::SE3Quat se3quat(quaternion, t);
@@ -117,10 +119,13 @@ bool optimizer::PoseOptimization(std::vector<std::shared_ptr<camera>> &cameras, 
     int nBad = 0;
     int nBad_total = 0;
     const float chi2Mono[4] = {5.991, 5.991, 5.991, 5.991};   // 单目
-    const float chi2Stereo[4] = {7.815, 7.815, 7.815, 7.815}; // 双目
-    const int its[4] = {10, 10, 10, 10};                      // 四次迭代，每次迭代的次数
-    for (size_t it = 0; it < 3; it++)
+    // const float chi2Mono[4] = {9.210,9.210,9.210,9.210};   // 单目
+    // const float chi2Mono[4] = {10.597, 10.597, 10.597, 10.597}; // 单目
+    const float chi2Stereo[4] = {7.815, 7.815, 7.815, 7.815};   // 双目
+    const int its[4] = {10, 10, 10, 10};                        // 四次迭代，每次迭代的次数
+    for (size_t it = 0; it < 4; it++)
     {
+        std::cout << "第 " << it + 1 << " 次优化, 本次的外点个数为：" << nBad << std::endl;
         optimizer.setVerbose(true);
         vSE3->setEstimate(se3quat);
         // 其实就是初始化优化器,这里的参数0就算是不填写,默认也是0,也就是只对level为0的边进行优化
@@ -163,7 +168,6 @@ bool optimizer::PoseOptimization(std::vector<std::shared_ptr<camera>> &cameras, 
             if (it == 2)
                 e->setRobustKernel(0); // 除了前两次优化需要RobustKernel以外, 其余的优化都不需要 -- 因为重投影的误差已经有明显的下降了
         }
-        std::cout << "第 " << it + 1 << " 次优化, 本次的外点个数为：" << nBad << std::endl;
         g2o::SE3Quat result = vSE3->estimate();
 
         camera::_Rci_Optimized = result.rotation().toRotationMatrix();
@@ -187,6 +191,7 @@ bool optimizer::PoseOptimization(std::vector<std::shared_ptr<camera>> &cameras, 
         std::cout << "x: " << t2.x() << std::endl;
         std::cout << "y: " << t2.y() << std::endl;
         std::cout << "z: " << t2.z() << std::endl;
+        std::cout << "-------------------------------------------------------------" << std::endl;
         nBad_total += nBad;
     }
     std::cout << "一共有 " << index << "个点" << std::endl;
@@ -218,4 +223,85 @@ bool optimizer::PoseOptimization(std::vector<std::shared_ptr<camera>> &cameras, 
     std::cout << "y: " << t2.y() << std::endl;
     std::cout << "z: " << t2.z() << std::endl;
     return true;
+}
+
+Eigen::Matrix4d optimizer::ComputeInitialT(std::vector<std::shared_ptr<camera>> &cameras, std::vector<std::shared_ptr<ircamera>> &ircameras)
+{
+    Eigen::Matrix<long double, 2, 1> error = Eigen::Matrix<long double, 2, 1>::Zero();
+    long double norm1 = 0.0;
+    long double norm2 = 0.0;
+    Eigen::Matrix4d Tci_best = Eigen::Matrix4d::Identity();
+    for (int k = 0; k < 30; ++k)
+    {
+        std::random_device rd;                                      // 用于生成随机数种子
+        std::mt19937 gen(rd());                                     // 使用 Mersenne Twister 算法生成随机数
+        std::uniform_int_distribution<> dis(0, cameras.size() - 1); // 设置随机数范围
+        int random_index = dis(gen);                                // 生成随机整数
+
+        Eigen::Matrix4d Tci_tmp = cameras[random_index]->_Tcb * ircameras[random_index]->_Tib.inverse();
+        Eigen::Matrix<long double, 2, 1> current_error = Eigen::Matrix<long double, 2, 1>::Zero();
+        for (int i = 0; i < cameras.size(); ++i)
+        {
+            std::shared_ptr<camera> camera = cameras[i];
+            std::shared_ptr<ircamera> ircamera = ircameras[i];
+
+            if (camera->_p2ds.size() != ircamera->_p2ds.size())
+            {
+                std::cout << "容器点不等，抛弃！！！！！!!!!" << std::endl;
+                continue;
+            }
+            for (int j = 0; j < camera->_p2ds.size(); ++j)
+            {
+                Eigen::Matrix<long double, 2, 1> obs;
+                obs << camera->_p2ds[j].x, camera->_p2ds[j].y;
+                Eigen::Vector3d v3D;
+                v3D << ircamera->_p3ds[j].x, ircamera->_p3ds[j].y, ircamera->_p3ds[j].z;
+                Eigen::Vector4d v3D_i_homogeneous; // 创建一个齐次坐标的4D向量
+                v3D_i_homogeneous << v3D, 1;       // 把3D点转换为齐次坐标
+
+                Eigen::Vector4d v3D_c_homogeneous = Tci_tmp * v3D_i_homogeneous; // 应用变换
+
+                Eigen::Vector3d v3D_c = v3D_c_homogeneous.head<3>(); // 转换回非齐次坐标
+                // Eigen::Vector2d res;
+                Eigen::Matrix<long double, 2, 1> res;
+                res[0] = camera::fx * v3D_c[0] / v3D_c[2] + camera::cx;
+                res[1] = camera::fy * v3D_c[1] / v3D_c[2] + camera::cy;
+                current_error += (obs - res).cwiseAbs();
+            }
+        }
+        norm2 = current_error.norm();
+        std::cout << "ransac times : " << k << "_________ error : " << norm2 << std::endl;
+        if (k == 0)
+        {
+            norm1 = norm2;
+            error = current_error;
+            Tci_best = Tci_tmp;
+        }
+        if (norm2 < norm1)
+        {
+            error = current_error;
+            norm1 = error.norm();
+            Tci_best = Tci_tmp;
+        }
+    }
+
+    std::cout << "---------------------------------------------" << std::endl;
+    std::cout << "the best error : " << norm1<< std::endl;
+    std::cout << "ransac Tci :" << std::endl;
+    std::cout << "Rotation: \n";
+    Eigen::Matrix3d rotation = Tci_best.block<3, 3>(0, 0);
+    Eigen::Quaterniond q(rotation);
+    std::cout << "w: " << q.w() << std::endl;
+    std::cout << "x: " << q.x() << std::endl;
+    std::cout << "y: " << q.y() << std::endl;
+    std::cout << "z: " << q.z() << std::endl;
+
+    // 输出平移部分（最后一列的前三个元素）
+    std::cout << "Translation: \n";
+    Eigen::Vector3d translation = Tci_best.block<3, 1>(0, 3);
+    std::cout << "x: " << translation.x() << std::endl;
+    std::cout << "y: " << translation.y() << std::endl;
+    std::cout << "z: " << translation.z() << std::endl;
+    std::cout << "---------------------------------------------" << std::endl;
+    return Tci_best;
 }
