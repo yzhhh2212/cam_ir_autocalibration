@@ -1,5 +1,10 @@
 #include "ir_camera.hpp"
 
+double ircamera::fx = 467.28;
+double ircamera::fy = 467.983;
+double ircamera::cx = 329.569;
+double ircamera::cy = 233.152;
+
 ircamera::ircamera()
 {
     _col = 5;

@@ -156,7 +156,8 @@ int main()
     std::shared_ptr<optimizer> pose_optimizer(new optimizer());
     std::cout<<"size of cameras " << cameras.size() << std::endl;
     std::cout<<"size of ircameras " << ircameras.size() << std::endl;
-    Eigen::Matrix4d initial_Tci =  pose_optimizer->ComputeInitialT(cameras,ircameras);
+    // Eigen::Matrix4d initial_Tci =  pose_optimizer->ComputeInitialT(cameras,ircameras);
+    Eigen::Matrix4d initial_Tci =  pose_optimizer->ComputeInitialTInverse(cameras,ircameras);
     if (pose_optimizer->PoseOptimization(cameras, ircameras,initial_Tci))
     {
         std::cout << "optimize success" << std::endl;

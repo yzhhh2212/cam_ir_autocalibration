@@ -225,6 +225,7 @@ bool optimizer::PoseOptimization(std::vector<std::shared_ptr<camera>> &cameras, 
     return true;
 }
 
+//使用ir的3D点投影到rgb上做误差
 Eigen::Matrix4d optimizer::ComputeInitialT(std::vector<std::shared_ptr<camera>> &cameras, std::vector<std::shared_ptr<ircamera>> &ircameras)
 {
     Eigen::Matrix<long double, 2, 1> error = Eigen::Matrix<long double, 2, 1>::Zero();
@@ -266,6 +267,90 @@ Eigen::Matrix4d optimizer::ComputeInitialT(std::vector<std::shared_ptr<camera>> 
                 Eigen::Matrix<long double, 2, 1> res;
                 res[0] = camera::fx * v3D_c[0] / v3D_c[2] + camera::cx;
                 res[1] = camera::fy * v3D_c[1] / v3D_c[2] + camera::cy;
+                current_error += (obs - res).cwiseAbs();
+            }
+        }
+        norm2 = current_error.norm();
+        std::cout << "ransac times : " << k << "_________ error : " << norm2 << std::endl;
+        if (k == 0)
+        {
+            norm1 = norm2;
+            error = current_error;
+            Tci_best = Tci_tmp;
+        }
+        if (norm2 < norm1)
+        {
+            error = current_error;
+            norm1 = error.norm();
+            Tci_best = Tci_tmp;
+        }
+    }
+
+    std::cout << "---------------------------------------------" << std::endl;
+    std::cout << "the best error : " << norm1<< std::endl;
+    std::cout << "ransac Tci :" << std::endl;
+    std::cout << "Rotation: \n";
+    Eigen::Matrix3d rotation = Tci_best.block<3, 3>(0, 0);
+    Eigen::Quaterniond q(rotation);
+    std::cout << "w: " << q.w() << std::endl;
+    std::cout << "x: " << q.x() << std::endl;
+    std::cout << "y: " << q.y() << std::endl;
+    std::cout << "z: " << q.z() << std::endl;
+
+    // 输出平移部分（最后一列的前三个元素）
+    std::cout << "Translation: \n";
+    Eigen::Vector3d translation = Tci_best.block<3, 1>(0, 3);
+    std::cout << "x: " << translation.x() << std::endl;
+    std::cout << "y: " << translation.y() << std::endl;
+    std::cout << "z: " << translation.z() << std::endl;
+    std::cout << "---------------------------------------------" << std::endl;
+    return Tci_best;
+}
+
+//使用rgb的3D点投影到ir上做误差
+Eigen::Matrix4d optimizer::ComputeInitialTInverse(std::vector<std::shared_ptr<camera>> &cameras, std::vector<std::shared_ptr<ircamera>> &ircameras)
+{
+    std::cout << "using inverse error to compute" << std::endl;
+    Eigen::Matrix<long double, 2, 1> error = Eigen::Matrix<long double, 2, 1>::Zero();
+    long double norm1 = 0.0;
+    long double norm2 = 0.0;
+    Eigen::Matrix4d Tci_best = Eigen::Matrix4d::Identity();
+    for (int k = 0; k < 30; ++k)
+    {
+        std::random_device rd;                                      // 用于生成随机数种子
+        std::mt19937 gen(rd());                                     // 使用 Mersenne Twister 算法生成随机数
+        std::uniform_int_distribution<> dis(0, cameras.size() - 1); // 设置随机数范围
+        int random_index = dis(gen);                                // 生成随机整数
+
+        Eigen::Matrix4d Tci_tmp = cameras[random_index]->_Tcb * ircameras[random_index]->_Tib.inverse();
+        std::cout << "random frame is " << random_index << std::endl;
+        Eigen::Matrix<long double, 2, 1> current_error = Eigen::Matrix<long double, 2, 1>::Zero();
+        for (int i = 0; i < cameras.size(); ++i)
+        {
+            std::shared_ptr<camera> camera = cameras[i];
+            std::shared_ptr<ircamera> ircamera = ircameras[i];
+
+            if (camera->_p2ds.size() != ircamera->_p2ds.size())
+            {
+                std::cout << "容器点不等，抛弃！！！！！!!!!" << std::endl;
+                continue;
+            }
+            for (int j = 0; j < camera->_p2ds.size(); ++j)
+            {
+                Eigen::Matrix<long double, 2, 1> obs;
+                obs << ircamera->_p2ds[j].x, ircamera->_p2ds[j].y;
+                Eigen::Vector3d v3D;
+                v3D << camera->_p3ds[j].x, camera->_p3ds[j].y, camera->_p3ds[j].z;
+                Eigen::Vector4d v3D_i_homogeneous; // 创建一个齐次坐标的4D向量
+                v3D_i_homogeneous << v3D, 1;       // 把3D点转换为齐次坐标
+
+                Eigen::Vector4d v3D_c_homogeneous = Tci_tmp.inverse() * v3D_i_homogeneous; // 应用变换
+
+                Eigen::Vector3d v3D_c = v3D_c_homogeneous.head<3>(); // 转换回非齐次坐标
+                // Eigen::Vector2d res;
+                Eigen::Matrix<long double, 2, 1> res;
+                res[0] = ircamera::fx * v3D_c[0] / v3D_c[2] + ircamera::cx;
+                res[1] = ircamera::fy * v3D_c[1] / v3D_c[2] + ircamera::cy;
                 current_error += (obs - res).cwiseAbs();
             }
         }
