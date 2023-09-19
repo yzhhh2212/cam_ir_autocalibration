@@ -160,6 +160,6 @@ int main()
     Eigen::Matrix4d initial_Tci =  pose_optimizer->ComputeInitialTInverse(cameras,ircameras);
     if (pose_optimizer->PoseOptimization(cameras, ircameras,initial_Tci))
     {
-        std::cout << "optimize success" << std::endl;
+        std::cout << "optimize success!" << std::endl;
     }
 }
